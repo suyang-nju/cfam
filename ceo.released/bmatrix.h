@@ -11,6 +11,8 @@
 
 static double gammln_cache_ary[GAMMLN_ARYLEN];
 static double gammln(double xx) {
+    return lgamma(xx);
+    
 	double x, y, tmp, ser;
 	static double cof[6] = {
 		76.18009172947146, -86.50532032941677, 24.01409824083091,
