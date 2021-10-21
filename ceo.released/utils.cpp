@@ -15,38 +15,36 @@
 #include <vector>
 #include <map>
 
-using namespace std;
-
 #include "utils.h"
 
-string StripExt(string& a) {
+std::string StripExt(std::string& a) {
 	for (int i=a.size()-1; i>=0; i--) {
 		if (DirSepQ(a[i])) return a;
 		if (a[i]=='.') return a.substr(0,i);
 	}
 	return a;
 }
-string GetFileName(string fn) {
+std::string GetFileName(std::string fn) {
 	size_t p = fn.find_last_of(DIR_SEPARATOR);
-	if (p==string::npos) return fn;
+	if (p==std::string::npos) return fn;
 	return fn.substr(p+1);
 }
-string GetFilePath(string fn) {
+std::string GetFilePath(std::string fn) {
 	size_t p = fn.find_last_of(DIR_SEPARATOR);
-	if (p==string::npos) return string();
+	if (p==std::string::npos) return std::string();
 	return fn.substr(0, p-1);
 }
 
-string ToString(const IntAry &v, char sep) {
-	ostringstream s;
+std::string ToString(const IntAry &v, char sep) {
+	std::ostringstream s;
 	for(size_t i=0; i<v.size(); i++) {
 		if (i) s << sep;
 		s << v[i];
 	}
 	return s.str();
 }
-string ToString(const DblAry &v, char sep) {
-	ostringstream s;
+std::string ToString(const DblAry &v, char sep) {
+	std::ostringstream s;
 	for(size_t i=0; i<v.size(); i++) {
 		if (i) s << sep;
 		s << v[i];
@@ -54,8 +52,8 @@ string ToString(const DblAry &v, char sep) {
 	return s.str();
 }
 /*
-TT string ToString(const T& v, char sep=' ') {
-	ostringstream s;
+TT std::string ToString(const T& v, char sep=' ') {
+	std::ostringstream s;
 	for(size_t i=0; i<v.size(); i++) {
 		if (i) s << sep; 
 		s << v[i];
@@ -64,58 +62,58 @@ TT string ToString(const T& v, char sep=' ') {
 }
 */
 
-string padright(string str, int n, char sym) {
+std::string padright(std::string str, int n, char sym) {
 	int l = str.size();
 	if (l>=n) return str;
-	return str + string(n-l, sym);
+	return str + std::string(n-l, sym);
 }
-string padleft(string str, int n, char sym) {
+std::string padleft(std::string str, int n, char sym) {
 	int l = str.size();
 	if (l>=n) return str;
-	return string(n-l, sym) + str;
+	return std::string(n-l, sym) + str;
 }
-bool StringToFile(ostringstream& str, string fn) {
-	ofstream fs(fn.c_str());
+bool StringToFile(std::ostringstream& str, std::string fn) {
+	std::ofstream fs(fn.c_str());
 	if (!fs) return false;
 	fs << str.str();
 	fs.close();
 	return true;
 }
-bool FileToString(string fn, string& str) {
-	ifstream f(fn.c_str());
+bool FileToString(std::string fn, std::string& str) {
+	std::ifstream f(fn.c_str());
 	if (!f) return false;
-	string s;
+	std::string s;
 	while (f >> s) str += (s + '\n');
 	f.close();
 	return true;
 }
-void qlog(ostringstream& oss) {
-	cout << oss.str();
+void qlog(std::ostringstream& oss) {
+	std::cout << oss.str();
 	oss.str("");
 }
-bool GetFileSize(const string& fn, ullong& filesize) {
-	ifstream fin(fn.c_str());
+bool GetFileSize(const std::string& fn, ullong& filesize) {
+	std::ifstream fin(fn.c_str());
 	if (fin.fail()) return false;
 	ullong start = fin.tellg();
-	fin.seekg(0, ios::end);
+	fin.seekg(0, std::ios::end);
 	ullong end = fin.tellg();
 	filesize = end-start;
 	return true;
 }
-void str_replace(string& str, const string& from, const string& to) {
+void str_replace(std::string& str, const std::string& from, const std::string& to) {
 	size_t j;
-	for (; (j=str.find(from))!=string::npos; )  {
+	for (; (j=str.find(from))!=std::string::npos; )  {
 		str.replace(j, from.length(), to);
 	}
 }
-bool GetWords(string& line, StrAry& words) {
+bool GetWords(std::string& line, StrAry& words) {
 	if (!line.size()) return false;
 	size_t from=0;
-	while(from!=string::npos) {
+	while(from!=std::string::npos) {
 		from = line.find_first_not_of(' ', from);
-		if (from==string::npos) break;
+		if (from==std::string::npos) break;
 		size_t to = line.find_first_of(' ', from);
-		if (to==string::npos) { if (from < line.size()) words.push_back(line.substr(from)); break; }
+		if (to==std::string::npos) { if (from < line.size()) words.push_back(line.substr(from)); break; }
 		words.push_back(line.substr(from, to-from));
 		from = to+1;
 	}

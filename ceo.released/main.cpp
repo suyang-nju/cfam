@@ -15,8 +15,6 @@
 #include <vector>
 #include <map>
 
-using namespace std;
-
 #include "utils.h"
 #include "clutypes.h"
 #include "bio_utils.h"
@@ -38,16 +36,16 @@ using namespace std;
 //
 
 struct MsaMatrix : public BMatrix {
-	ostringstream _ss;
+	std::ostringstream _ss;
 	ByteIntMapIter _bit;
 
-	bool WriteFISofAllVariants(string fn, int domain_start=1) {
+	bool WriteFISofAllVariants(std::string fn, int domain_start=1) {
 		if (domain_start<1) domain_start = 1;	// so 0 can be passed safely when region is unknown
 		Elapsed ela; ela.start();
 		ByteByteMapIter it;
 
 		// we need scores even if msa consists of only one sequence
-		_ss.str(""); _ss << "#variant" << TAB << "FIS" << TAB << "vcons" << TAB << "vspec" << TAB << "gaps" << endl;
+		_ss.str(""); _ss << "#variant" << TAB << "FIS" << TAB << "vcons" << TAB << "vspec" << TAB << "gaps" << std::endl;
 		if (_height==1) {
 			for(int p=0; p<_width; p++) {
 				byte AAfrom = at(p, 0);				// code, not actual character
@@ -59,7 +57,7 @@ struct MsaMatrix : public BMatrix {
 					_ss << _code2sym[AAfrom] << (domain_start + p) << symAAto << TAB;
 					if (AAfrom==_gap) _ss << TAB << TAB << TAB;
 					else _ss << 0 << TAB << 0 << TAB << 0 << TAB << 0;
-					_ss << endl;
+					_ss << std::endl;
 				}
 			}
 			StringToFile(_ss, fn);
@@ -84,10 +82,10 @@ struct MsaMatrix : public BMatrix {
 				bool ok = GetFIS(clusymcnt, AAfrom, p, AAto, FIS, vc, vs);
 				_ss << _code2sym[AAfrom] << (domain_start + p) << symAAto << TAB;
 				if (ok) _ss << FIS << TAB << vc << TAB << vs << TAB << fgaps; else _ss << TAB << TAB << TAB;
-				_ss << endl;
+				_ss << std::endl;
 			}
 		}
-		if (_echoQ) cout << "FIS for all variants computed in : " << ela.get() << " secs." << endl;
+		if (_echoQ) std::cout << "FIS for all variants computed in : " << ela.get() << " secs." << std::endl;
 		StringToFile(_ss, fn);
 		return true;
 	}
@@ -154,11 +152,11 @@ struct MsaMatrix : public BMatrix {
 			if (_bit==symcnt.end()) symcnt[sym] = 1; else symcnt[sym]++;
 		}
 	}
-	void WriteMsaWithClustering(MSA &msa, string fn) {
+	void WriteMsaWithClustering(MSA &msa, std::string fn) {
 		if (msa._height==1) return;
 		IntAry columns, rows;
 		StrAry cluindecies;
-		ostringstream s;
+		std::ostringstream s;
 		for(int ci=0; ci<_cr.clu.size(); ci++) {
 			s.str(""); s << ci;
 			for(int r=0; r<_cr.clu[ci].ids.size(); r++) {
@@ -168,19 +166,19 @@ struct MsaMatrix : public BMatrix {
 		}
 		msa.Write(fn, columns, rows, cluindecies);
 	}
-	void AddMapSyms(ByteStrMap& m, string str, const char* syms) {
+	void AddMapSyms(ByteStrMap& m, std::string str, const char* syms) {
 		int len = strlen(syms);
 		for(int k=0; k<len; k++) m[syms[k]] = str;
 	}
 	// column is optional column index to highlight (given in 0-based msa column index)
-	void WriteMsaHtml(MSA &msa, string fn, int column=-1) {
+	void WriteMsaHtml(MSA &msa, std::string fn, int column=-1) {
 		if (msa._height==1) return;
 		IntAry columns, rows;
 		DblAry ident, identLen;
 		msa.GetIdentityToRefSeq(rows, columns, ident, identLen);
 		bool identQ = ident.size()==msa._height;
 		StrAry cluindecies;
-		ostringstream s;
+		std::ostringstream s;
 		ByteStrMap mview;
 		ByteStrMapIter mvit;
 		AddMapSyms(mview, "gr", ".-");
@@ -219,7 +217,7 @@ struct MsaMatrix : public BMatrix {
 		for(int ci=0; ci<_cr.clu.size(); ci++) {
 			for(int r=0; r<_cr.clu[ci].ids.size(); r++) {
 				int row = _cr.clu[ci].ids[r];
-				ostringstream idt1, idt2;
+				std::ostringstream idt1, idt2;
 				if (identQ) {
 					idt1 << std::fixed << std::setprecision(1) << 100*ident[row] << '%';
 					idt2 << std::fixed << std::setprecision(1) << 100*identLen[row] << '%';
@@ -263,47 +261,47 @@ int main(int argc, char** argv) {
 
 //	SanityCheck(); return 0;
 
-	cout << "Combinatorial Entropy Optimization (CEO) for multiple sequence alignment, v.1" << endl
-		 << "Please cite: Reva, B.A., Antipin, Y.A. and Sander, C. (2007) Genome Biol, 8, R232." << endl
-		 << "             Determinants of protein function revealed by combinatorial entropy optimization" << endl << endl;
+	std::cout << "Combinatorial Entropy Optimization (CEO) for multiple sequence alignment, v.1" << std::endl
+		 << "Please cite: Reva, B.A., Antipin, Y.A. and Sander, C. (2007) Genome Biol, 8, R232." << std::endl
+		 << "             Determinants of protein function revealed by combinatorial entropy optimization" << std::endl << std::endl;
 
 	if (argc<2) {
-		cout << "usage : msa=<filename> msaout=<filename> cfrom=<float> cto=<float> csteps=<integer> limit=<integer> quiet=<0/1>" << endl
-			 << "        cmd - clu: perform clustering, otherwise just write filtered MSA" << endl
-			 << "        msa - multiple sequence alignment input file in STOCKHOLM (Pfam/Hmmer) or plain text format" << endl
-			 << "        cfrom/cto - optimization region [0..1], defaults are 0.75..0.75, recommended 0.65..0.95" << endl
-			 << "        csteps - number of iterations over opt.region, default is 1, recommended 6" << endl
-			 << "        limit - number of sequences to read counting from the top of msa" << endl
-			 << "        msaout - name of output msa (if processed/filtered)" << endl
-			 << "        fc - filter columns (incompatible with 'refseq'), fraction of gaps to remove" << endl
-			 << "        fs - filter sequences, fraction of gaps to remove" << endl
-			 << "        fi - filter sequences by identity, all pairs are considered, second sequence is removed" << endl
-			 << "        hmmd - optional Hmmer domain hits table to read q-values from and sort MSA accordingly," << endl
-			 << "               only most significant domain hit per protein is included in MSA" << endl
-			 << "        refseq - optional reference sequence in FASTA file (since it's not in Hmmer output MSA)" << endl
-			 << "                 to make it first one, columns with gaps in refseq are removed" << endl
-			 << "        msahtmlout - produce MSA HTML with mview coloring and subfamilies" << endl
-			 << endl;
+		std::cout << "usage : msa=<filename> msaout=<filename> cfrom=<float> cto=<float> csteps=<integer> limit=<integer> quiet=<0/1>" << std::endl
+			 << "        cmd - clu: perform clustering, otherwise just write filtered MSA" << std::endl
+			 << "        msa - multiple sequence alignment input file in STOCKHOLM (Pfam/Hmmer) or plain text format" << std::endl
+			 << "        cfrom/cto - optimization region [0..1], defaults are 0.75..0.75, recommended 0.65..0.95" << std::endl
+			 << "        csteps - number of iterations over opt.region, default is 1, recommended 6" << std::endl
+			 << "        limit - number of sequences to read counting from the top of msa" << std::endl
+			 << "        msaout - name of output msa (if processed/filtered)" << std::endl
+			 << "        fc - filter columns (incompatible with 'refseq'), fraction of gaps to remove" << std::endl
+			 << "        fs - filter sequences, fraction of gaps to remove" << std::endl
+			 << "        fi - filter sequences by identity, all pairs are considered, second sequence is removed" << std::endl
+			 << "        hmmd - optional Hmmer domain hits table to read q-values from and sort MSA accordingly," << std::endl
+			 << "               only most significant domain hit per protein is included in MSA" << std::endl
+			 << "        refseq - optional reference sequence in FASTA file (since it's not in Hmmer output MSA)" << std::endl
+			 << "                 to make it first one, columns with gaps in refseq are removed" << std::endl
+			 << "        msahtmlout - produce MSA HTML with mview coloring and subfamilies" << std::endl
+			 << std::endl;
 		return 0;
 	}
 
 	CmdArgs ca(argc, argv);		// -------------------------------------------- arguments ----------------------------------
 
 	bool ok;
-	string msafn, rffn, rfgaps, hmmd, cmd, msaout, msacluout, msahtmlout;
+	std::string msafn, rffn, rfgaps, hmmd, cmd, msaout, msacluout, msahtmlout;
 	int steps, quiet, limit, position;
 	double start, end, fc, fs, fi;
 
-	ok = ca.GetValue("msaout", string(""), msaout);
-	bool msacluQ = ca.GetValue("msacluout", string(""), msacluout);
-	bool msahtmlQ = ca.GetValue("msahtmlout", string(""), msahtmlout);
+	ok = ca.GetValue("msaout", std::string(""), msaout);
+	bool msacluQ = ca.GetValue("msacluout", std::string(""), msacluout);
+	bool msahtmlQ = ca.GetValue("msahtmlout", std::string(""), msahtmlout);
 
-	ok = ca.GetValue("msa", string(""), msafn);
-	if (!ok) { cout << "filename not specified" << endl; return 1; }
+	ok = ca.GetValue("msa", std::string(""), msafn);
+	if (!ok) { std::cout << "filename not specified" << std::endl; return 1; }
 
-	string cmdClu("clu"), cmdVars("vars");
+	std::string cmdClu("clu"), cmdVars("vars");
 
-	ok = ca.GetValue("cmd", string(""), cmd);	// command: 'msa' or no command - read/write msa, 'clu' - clustering, 'vars - clustering + write FIS for all variants
+	ok = ca.GetValue("cmd", std::string(""), cmd);	// command: 'msa' or no command - read/write msa, 'clu' - clustering, 'vars - clustering + write FIS for all variants
 	ok = ca.GetValue("cfrom", 0.75, start);		// clustering: start of optimization parameter A1
 	ok = ca.GetValue("cto", 0.75, end);			// clustering: end of optimization parameter A1
 	ok = ca.GetValue("csteps", 1, steps);		// clustering: number of optimization steps to take over A1 region
@@ -314,10 +312,10 @@ int main(int argc, char** argv) {
 	ok = ca.GetValue("fi", 0., fi);				// filter sequences by identity
 	ok = ca.GetValue("gapspos", 0, position);	// specify protein position -- all sequences with gaps in this position are removed -- which makes specificity analysis position-specific!
 
-	bool hmmdQ = ca.GetValue("hmmd", string(""), hmmd);
-	bool rfQ = ca.GetValue("refseq", string(""), rffn);
+	bool hmmdQ = ca.GetValue("hmmd", std::string(""), hmmd);
+	bool rfQ = ca.GetValue("refseq", std::string(""), rffn);
 
-	ca.GetValue("refseqgaps", string(""), rfgaps);
+	ca.GetValue("refseqgaps", std::string(""), rfgaps);
 	bool rfgapsQ = rfgaps=="1";
 
 	bool echoQ = quiet==0;
@@ -325,7 +323,7 @@ int main(int argc, char** argv) {
 	MSA msa(echoQ, true, true);	// ------------------------------------------- MSA ----------------------------------------
 	if (rfQ) msa.ReadRefSeq(rffn);
 	if (hmmdQ) {
-		cout << "reading hmm domain hits " << hmmd << endl;
+		std::cout << "reading hmm domain hits " << hmmd << std::endl;
 		msa.ReadHmmDomainHits(hmmd);
 	}
 
@@ -342,14 +340,14 @@ int main(int argc, char** argv) {
 	if (hmmdQ) msa.ReorderByHmmDomainCValue(rows);
 
 	StrAry annot;
-	string rfmsafn = msaout.size() ? msaout : StripExt(msafn) + ".flt.msa";
+	std::string rfmsafn = msaout.size() ? msaout : StripExt(msafn) + ".flt.msa";
 	msa.Write(rfmsafn, columns, rows, annot);
 
 	if (cmd!=cmdClu && cmd!=cmdVars) return 0;
 
 	// ---------------------------------------------------------------------- clustering -----------------------------------
 
-	cout << "clustering : [" << start << ".." << end << "] -- " << steps << " step(s)" << endl;
+	std::cout << "clustering : [" << start << ".." << end << "] -- " << steps << " step(s)" << std::endl;
 
 	MSA msa2;
 	if (!msa2.Read(rfmsafn)) return 1;
@@ -371,7 +369,7 @@ int main(int argc, char** argv) {
 
 	// ------------------------------------------------------------ all possible variants in reference sequence ------------
 
-	string fn(StripExt(rfmsafn) + ".variants");
+	std::string fn(StripExt(rfmsafn) + ".variants");
 	int domain_start, domain_end;
 	msa2.GetRefSeqRegion(domain_start, domain_end);
 	m.WriteFISofAllVariants(fn, domain_start);

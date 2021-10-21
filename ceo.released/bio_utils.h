@@ -2,12 +2,12 @@
 #pragma once
 
 struct Sequence {
-	string name;
-	string seq;
-	void FromFasta(string& fasta) {
+	std::string name;
+	std::string seq;
+	void FromFasta(std::string& fasta) {
 		size_t to=0, from=0;
-		while(string::npos!=(to=fasta.find_first_of('\n', from))) {
-			string line(fasta.substr(from, to-from)); from=to+1;
+		while(std::string::npos!=(to=fasta.find_first_of('\n', from))) {
+			std::string line(fasta.substr(from, to-from)); from=to+1;
 			if (!line.size()) continue;
 			if (line[0]=='>') { name = line.substr(1); continue; }
 			seq += line;
@@ -18,21 +18,21 @@ struct Sequence {
 // -------------------------------------------------------------- protein region name (protID/from-to) ---
 
 struct ProtRgnName {	// EGFR_HUMAN/1-300
-	string protID;
+	std::string protID;
 	int from;
 	int to;
 	ProtRgnName() : from(0), to(0) {}
-	ProtRgnName(string str) { parse(str); }
-	string str() { ostringstream s; s << protID << '/' << from << '-' << to; return s.str();}
+	ProtRgnName(std::string str) { parse(str); }
+	std::string str() { std::ostringstream s; s << protID << '/' << from << '-' << to; return s.str();}
 	bool validQ() { return protID.size() && from>0 && to>from; }
-	bool parse(string name) {
+	bool parse(std::string name) {
 		protID = ""; from = to = 0;
 		size_t p = name.find_first_of('/');
-		if (p==string::npos) { protID = name; return false; }
+		if (p==std::string::npos) { protID = name; return false; }
 		protID = name.substr(0, p);
 		size_t n = name.find_first_of('-', p);
-		if (n==string::npos) return false;
-		istringstream s(name.substr(p+1, n-p+1)); s >> from;
+		if (n==std::string::npos) return false;
+		std::istringstream s(name.substr(p+1, n-p+1)); s >> from;
 		s.str(name.substr(n+1)); s >> to;
 		return from>0 && to>from;
 	}
@@ -41,26 +41,26 @@ struct ProtRgnName {	// EGFR_HUMAN/1-300
 // -------------------------------------------------------------- Hmmer ----------------------------------
 
 struct ParseHmm {
-	istringstream _iss;
+	std::istringstream _iss;
 	StrAry _domains;
 	DblAry _cvalues;
 	IntAry _hfrom;
 	IntAry _hto;
-	string _str;
+	std::string _str;
 	StrDblMap _bestdomains;		// only domains with lowest c-value here
 	StrDblMapIter _it;
 	bool DomainsQ() { return 0!=_bestdomains.size(); }
-	bool BestDomainQ(string domain) { return _bestdomains.find(domain) != _bestdomains.end(); }
-	bool GetDomainCValue(string domain, double& cvalue) {
+	bool BestDomainQ(std::string domain) { return _bestdomains.find(domain) != _bestdomains.end(); }
+	bool GetDomainCValue(std::string domain, double& cvalue) {
 		_it = _bestdomains.find(domain);
 		if (_it==_bestdomains.end()) return false;
 		cvalue = _it->second;
 		return true;
 	}
-	bool ParseDomainHits(string fn) {
-		string domain, lastdomain;
+	bool ParseDomainHits(std::string fn) {
+		std::string domain, lastdomain;
 		double cval, mincval = 1000;
-		ostringstream rgn;
+		std::ostringstream rgn;
 		int hfrom, hto;
 		FileLinesIter it;
 		if (!it.open(fn, true)) return false;
@@ -97,7 +97,7 @@ struct ParseHmm {
 		}
 		_bestdomains.clear();
 		for (StrStrMapIter it=proteins.begin(); it!=proteins.end(); it++) {
-			string name(it->first + '/' + it->second);
+			std::string name(it->first + '/' + it->second);
 			_bestdomains[name] = cvalues[it->first];
 		}
 		return true;

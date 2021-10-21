@@ -10,14 +10,14 @@ struct CluID {	// -------------------------------- one cluster, list of items --
 	void Reset() { entropy = energy = 0.; ids.clear(); }
 	void Add(int id) { ids.push_back(id); sort(ids.begin(), ids.end()); }
 	void Sort() { if (ids.size() < 2) return; sort(ids.begin(), ids.end()); }
-	string str() {
-		ostringstream str;
+	std::string str() {
+		std::ostringstream str;
 		for(int k=0; k<ids.size(); k++) str << (k?",":"") << ids[k];
 		return str.str();
 	}
 };
 struct Clu {  // ---------------------------------- clustering as a list of clusters --------------------------------
-	vector<CluID>	clu;
+	std::vector<CluID>	clu;
 	void Reset() { clu.clear(); }
 	bool EmptyCluQ(int nclu) {
 		if (nclu >= clu.size()) return true;
@@ -28,7 +28,7 @@ struct Clu {  // ---------------------------------- clustering as a list of clus
 		for (int k=0; k<clu.size(); k++) len += clu[k].ids.size();
 		return len;
 	}
-	void GetAsList(vector<int> &list) {
+	void GetAsList(std::vector<int> &list) {
 		list.clear();
 		for (int k=0; k<clu.size(); k++)
 			for (int j=0; j<clu[k].ids.size(); j++)
@@ -88,7 +88,7 @@ struct CluPairInfo {	// only pairs of clusters get merged
 #elif __APPLE__
 #include <unordered_map>
 #else
-#include <tr1/unordered_map>
+#include <unordered_map>
 #endif
 
 struct CluIDHash;
@@ -146,8 +146,8 @@ struct DistanceMap { // --------------------------------------------------- clu 
 		m[clu] = CluPairInfo(entropy, energy);
 	}
 	void clear() { m.clear(); }
-	string str() {
-		ostringstream s;
+	std::string str() {
+		std::ostringstream s;
 		s << m.bucket_count() << "," << m.max_bucket_count() << "," << m.load_factor();
 		return s.str();
 	}

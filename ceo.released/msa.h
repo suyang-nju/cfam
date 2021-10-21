@@ -8,7 +8,7 @@ struct MSA {	// ----------------------------------------------------------------
 
 	StrAry _seqs;
 	StrAry _names;
-	vector<ProtRgnName> _rgns;
+	std::vector<ProtRgnName> _rgns;
 	int _maxnamelen;
 	int _namepad;
 	int _annotpad;
@@ -45,14 +45,14 @@ struct MSA {	// ----------------------------------------------------------------
 		return Q;
 	}
 	inline byte at(int column, int row) { return _seqs[row][column]; }
-	void ReadRefSeq(string fn) {
-		string seq;
+	void ReadRefSeq(std::string fn) {
+		std::string seq;
 		FileToString(fn, seq);
 		_rf.FromFasta(seq);
 	}
 	// annot is text annotation per each sequence, printed as a column between seq.name and msa
 	// annot must be parallel to rows and has same length
-	bool Write(string fn, IntAry& columns, IntAry& rows, StrAry& annot) {
+	bool Write(std::string fn, IntAry& columns, IntAry& rows, StrAry& annot) {
 		IntAry seqs;
 		if (!rows.size()) FillInc(seqs, _height); else seqs = rows;
 		bool allQ = columns.size()==0;
@@ -63,13 +63,13 @@ struct MSA {	// ----------------------------------------------------------------
 			for(int k=0; k<annot.size(); k++) if (annot[k].size()>annotW) annotW = annot[k].size();
 			annotW += _annotpad;
 		}
-		ofstream f(fn.c_str());
-		if (!f.good()) { cout << endl << "Can't open " << fn << " for writing" << endl; return false; }
+		std::ofstream f(fn.c_str());
+		if (!f.good()) { std::cout << std::endl << "Can't open " << fn << " for writing" << std::endl; return false; }
 		int pad = _maxnamelen + annotW + _namepad;
 
 		for(int k=0; k<seqs.size(); k++) {
 			int row = seqs[k];
-			string s(padright(_names[row], pad));
+			std::string s(padright(_names[row], pad));
 			if (annotQ) s += padleft(annot[k], annotW) + padleft(" ", 3);
 			f.write(s.c_str(), s.size());
 			if (allQ) {
@@ -86,17 +86,17 @@ struct MSA {	// ----------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------------------------------
 	// this will read STOCKHOLM msa format (hmm output), as well as plain text msa
 	//
-	bool Read(string fn, int limit=0) {
+	bool Read(std::string fn, int limit=0) {
 		_seqs.clear();
 		_names.clear();
 		_rgns.clear();
 		_gapcount = 0;
-		string line, name;
-		if (_echoQ)	cout << "reading " << fn << (_forceuppercaseQ ? " (force upper case)" : "")
-						 << (_replacedotsQ ? " (replace . with -)" : "") << " ... " << endl;
+		std::string line, name;
+		if (_echoQ)	std::cout << "reading " << fn << (_forceuppercaseQ ? " (force upper case)" : "")
+						 << (_replacedotsQ ? " (replace . with -)" : "") << " ... " << std::endl;
 		FileLinesIter it;
 		if (!it.open(fn)) return false;
-		string hmmrca("#=GC RF");	// look for HMM "reference coordinate annotation" line to align reference sequence to
+		std::string hmmrca("#=GC RF");	// look for HMM "reference coordinate annotation" line to align reference sequence to
 
 		while(it.getline()) {
 			int l = it._line.length();
@@ -109,24 +109,24 @@ struct MSA {	// ----------------------------------------------------------------
 			if (!AddSequence(it._line, it._nline)) break;
 		}
 		_height = _seqs.size();
-		if (!_height) { cout << "no sequences found" << endl; return false; }
+		if (!_height) { std::cout << "no sequences found" << std::endl; return false; }
 		if (_echoQ) {
 			int size = _seqs.size() * _seqs[0].length();
 			double dens = 100 * _gapcount / size;
-			cout << "msa dimensions : " << _seqs.size() << " seq x " << _seqs[0].length() << " res" << endl
-				 << "fraction of gaps : " << std::fixed << std::setprecision(1) << dens << "%" << endl;
+			std::cout << "msa dimensions : " << _seqs.size() << " seq x " << _seqs[0].length() << " res" << std::endl
+				 << "fraction of gaps : " << std::fixed << std::setprecision(1) << dens << "%" << std::endl;
 		}
 		it.close();
 		_width = _seqlen;
 		return true;
 	}
-	bool AddSequence(string& line, int nline, bool refseqQ=false) {
+	bool AddSequence(std::string& line, int nline, bool refseqQ=false) {
 		size_t found = line.find_first_of(' ');
-		if (found==string::npos) {
-			cout << "space not found at line " << nline << endl << line << endl;
+		if (found==std::string::npos) {
+			std::cout << "space not found at line " << nline << std::endl << line << std::endl;
 			return false;
 		}
-		string name = line.substr(0, found);
+		std::string name = line.substr(0, found);
 		if (!refseqQ && name==_rf.name) return true;	// do not read reference sequence, it will be added separately to make sure it's first one
 		// if hmm domain hit table is loaded, leave only "good" domains in msa, unless this is reference sequence
 		if (!refseqQ && _hmmQ && !_hmm.BestDomainQ(name)) return true;
@@ -141,9 +141,9 @@ struct MSA {	// ----------------------------------------------------------------
 		int len = _names.back().size();
 		if (len > _maxnamelen) _maxnamelen = len;
 		found = line.find_first_not_of(' ', found);
-		if (found==string::npos) { cout << "sequence not found in " << endl << line << endl; return false; }
+		if (found==std::string::npos) { std::cout << "sequence not found in " << std::endl << line << std::endl; return false; }
 
-		string seq(line.substr(found));
+		std::string seq(line.substr(found));
 		if (_forceuppercaseQ)	// uppercase all sequences
 			std::transform(seq.begin(),seq.end(),seq.begin(), (int(*)(int))toupper);	// pretty unbelievable that crap like this is now a c++ standard
 
@@ -157,10 +157,10 @@ struct MSA {	// ----------------------------------------------------------------
 		int last = _seqs.size()-1;
 		if (!_seqlen) _seqlen = _seqs[0].size();
 		if (_seqlen!=_seqs[last].size()) {
-			cout << "Sequence at line " << nline << " (length=" << _seqs[last].size() << ") : "
-					<< endl << _seqs[last] << endl
+			std::cout << "Sequence at line " << nline << " (length=" << _seqs[last].size() << ") : "
+					<< std::endl << _seqs[last] << std::endl
 					<< "previous (length=" << _seqs[last-1].size() << ") : "
-					<< _seqs[last-1] << endl;
+					<< _seqs[last-1] << std::endl;
 			return false;
 		}
 		return true;
@@ -295,22 +295,22 @@ struct MSA {	// ----------------------------------------------------------------
 
 	// ------------------------------------------------------------------------------------------ hmm --------------------
 
-	bool InsertRefSeqUsingHmmRCA(string& line, int nline) {
+	bool InsertRefSeqUsingHmmRCA(std::string& line, int nline) {
 		if (!_rf.seq.size()) return false;	// need reference sequence
 		size_t pos = line.find_first_not_of(' ', 7);	// "#=GC RF"
-		if (pos==string::npos) return false;
-		string seq(line.substr(pos));
+		if (pos==std::string::npos) return false;
+		std::string seq(line.substr(pos));
 		int rfpos = 0;
-		string refseq;
+		std::string refseq;
 		for(pos=0;pos<seq.size();pos++) {
 			if (seq[pos]=='.') { refseq += '-'; continue; }
 			refseq += _rf.seq[rfpos++];
 		}
-		string row(_rf.name + "  " + refseq);
+		std::string row(_rf.name + "  " + refseq);
 		AddSequence(row, nline, true);
 		return true;
 	}
-	bool ReadHmmDomainHits(string fn) { return _hmmQ = _hmm.ParseDomainHits(fn); }
+	bool ReadHmmDomainHits(std::string fn) { return _hmmQ = _hmm.ParseDomainHits(fn); }
 
 	bool ReorderByHmmDomainCValue(IntAry& rows) {	// rows must be empty or start with 0 -- reference sequence assumed first one
 		if (!rows.size()) FillInc(rows, _height);
@@ -366,7 +366,7 @@ struct MSA {	// ----------------------------------------------------------------
 				int idx = GetPairIndex(i,j);
 				_identity[idx] = ni / width;
 			}
-			cout << i << endl;
+			std::cout << i << std::endl;
 		}
 	}
 

@@ -44,17 +44,17 @@ struct BMatrix {
 	int					_height;
 	int					_maxcharsize;	// code of max character found + 1
 	int					_histogram[HIST_ARYLEN];
-	vector<ByteAry>		_transposed;	// transposed MSA for faster access
+	std::vector<ByteAry>		_transposed;	// transposed MSA for faster access
 	IntAry				_symhist;
 	IntAry				_colseqs;		// number of sequences in each column (non-gaps)
-	vector<ByteIntMap>	_colnsym;
-	vector<ByteDblMap>	_colfreq;
-	vector<IntDblMap>	_chaos_ent;		// cached chaos entropy for each column and each possible clu length, int is within [2.._height]
+	std::vector<ByteIntMap>	_colnsym;
+	std::vector<ByteDblMap>	_colfreq;
+	std::vector<IntDblMap>	_chaos_ent;		// cached chaos entropy for each column and each possible clu length, int is within [2.._height]
 	DistanceMap			_dmap;
 	CluResults			_cr;
 	DblAry				_a1list;
-	vector<CluResults>	_shots;			// store cluster snapshot for each iteration
-	vector<CluResults>	_bestshots;
+	std::vector<CluResults>	_shots;			// store cluster snapshot for each iteration
+	std::vector<CluResults>	_bestshots;
 	DblAry				_freqent;		// frequential entropy (conservation) - property of matrix
 	DblAry				_freqent2;
 	DblAry				_freqentNG;		// no-gaps
@@ -89,7 +89,7 @@ struct BMatrix {
 				if (it==_sym2code.end()) {
 					code = _sym2code.size();
 					if (code==254) {
-						cout << "More than 254 different symbols found in the data." << endl;
+						std::cout << "More than 254 different symbols found in the data." << std::endl;
 						return false;
 					}
 					_sym2code[v] = code;
@@ -103,7 +103,7 @@ struct BMatrix {
 			}
 		}
 		_maxcharsize++;
-		if (_echoQ) cout << "unique symbols : " << _maxcharsize << endl;
+		if (_echoQ) std::cout << "unique symbols : " << _maxcharsize << std::endl;
 		return true;
 	}
 
@@ -130,7 +130,7 @@ struct BMatrix {
 	inline byte at(int column, int row) { return _transposed[column][row]; }
 	inline byte symbol(int column, int row) { return _code2sym[ _transposed[column][row] ]; }
 
-	void Clusterize(string msafn, CluSettings& cs, bool echoQ=true) {
+	void Clusterize(std::string msafn, CluSettings& cs, bool echoQ=true) {
 		_echoQ = echoQ;
 		if (!_width || !_height || !_transposed.size()) return;
 		CacheColumnsFrequency();
@@ -139,7 +139,7 @@ struct BMatrix {
 		GetColumnsCombinatorialEntropy(_cr);
 		GetConservation();
 		double elapsed = 0;
-		string xmlfn(StripExt(msafn) + ".clu.xml");
+		std::string xmlfn(StripExt(msafn) + ".clu.xml");
 		WriteCluXml(xmlfn, msafn, elapsed, cs);
 	}
 	void FillRowToClu() {
@@ -154,8 +154,8 @@ struct BMatrix {
 
 		if (!_cr.columns.size()) FillInc(_cr.columns, _width);	// use all columns if not specified
 		Elapsed ela(true);
-		ostringstream oss;
-		if (_echoQ) oss << endl << "Clustering,  A1 min..max, nsteps : " << cs.A1begin << ".." << cs.A1end << ", " << cs.A1steps << " steps" << endl; qlog(oss);
+		std::ostringstream oss;
+		if (_echoQ) oss << std::endl << "Clustering,  A1 min..max, nsteps : " << cs.A1begin << ".." << cs.A1end << ", " << cs.A1steps << " steps" << std::endl; qlog(oss);
 
 		int pstep = 0;
 		_dmap.Init();
@@ -180,7 +180,7 @@ struct BMatrix {
 
 			double energy, entropy;
 			double A1 = cs.A1begin + nstep * (cs.A1end - cs.A1begin) / (double)cs.A1steps;
-			if (_echoQ) oss << "with A1 = " << A1 << " ---------------------------------" << endl; qlog(oss);
+			if (_echoQ) oss << "with A1 = " << A1 << " ---------------------------------" << std::endl; qlog(oss);
 
 			while (_cr.clu.size() > 1) {
 
@@ -199,26 +199,26 @@ struct BMatrix {
 							entropy = GetClustersEntropyDistance(_cr, c1, c2);
 							if (_prfQ) prf.stop(prfEntropyID);
 
-						//	oss << _cr.clu.size() << " " << c1 << " " << c2 << " " << entropy << endl; qlog(oss);
+						//	oss << _cr.clu.size() << " " << c1 << " " << c2 << " " << entropy << std::endl; qlog(oss);
 							int length = _cr.clu[c1].ids.size() + _cr.clu[c2].ids.size();
 							energy = A1 * entropy / (double)(_width * length) + (1. - A1) * log((double)length);
 							_dmap.add(tmpclu, entropy, energy);
 						}
 						if (fabs(energy - best_energy) > DBL_EPSILON && energy < best_energy) {
-						//	oss << "better: " << energy << " < " << best_energy << " : clu " << mc1 << " + " << mc2 << endl; qlog(oss);
+						//	oss << "better: " << energy << " < " << best_energy << " : clu " << mc1 << " + " << mc2 << std::endl; qlog(oss);
 							best_energy = energy;
 							mc1 = c1; mc2 = c2;
 							joined_entropy = entropy;
 						}
 					}
-					if (_echoQ && _cr.clu.size() == _height) { oss << '.'; qlog(oss); cout.flush(); }
+					if (_echoQ && _cr.clu.size() == _height) { oss << '.'; qlog(oss); std::cout.flush(); }
 				}
 				MergeClusters(_cr, mc1, mc2, joined_entropy, best_energy);
 
 				_cr.CalcWholeEntropy();
 				_shots.push_back(_cr);
 				if (_echoQ)
-					oss << endl << "merging clu " << mc1 << " + " << mc2 << " energy: " << best_energy
+					oss << std::endl << "merging clu " << mc1 << " + " << mc2 << " energy: " << best_energy
 						<< ", entropy: "  << _cr.whole_entropy << ", nclus: " << _cr.clu.size(); qlog(oss);
 					//	<< "   " << _dmap.str();
 
@@ -233,13 +233,13 @@ struct BMatrix {
 					if (_shots[j].whole_entropy < _shots[best].whole_entropy) best = j;
 				}
 			}
-			if (_echoQ) oss << endl << "Best entropy : " << _shots[best].whole_entropy << endl; qlog(oss);
+			if (_echoQ) oss << std::endl << "Best entropy : " << _shots[best].whole_entropy << std::endl; qlog(oss);
 
 			_bestshots.push_back( _shots[best] );
 			_a1list.push_back(A1);
 		}
 
-		if (_prfQ) { prf.stop(prfcluID); cout << prf.str(); }
+		if (_prfQ) { prf.stop(prfcluID); std::cout << prf.str(); }
 
 		// find clu snapshot with smallest entropy
 		int best = 0;
@@ -248,8 +248,8 @@ struct BMatrix {
 
 		_cr = _bestshots[best];
 		if (_echoQ)
-			oss << endl << "Best A1 : " << _cr.A1 << ", best entropy : " << _cr.whole_entropy
-				<< ", " << ela.get() << " secs." << endl; qlog(oss);
+			oss << std::endl << "Best A1 : " << _cr.A1 << ", best entropy : " << _cr.whole_entropy
+				<< ", " << ela.get() << " secs." << std::endl; qlog(oss);
 
 	}
 
@@ -358,7 +358,7 @@ struct BMatrix {
 
 	void CacheColumnsFrequency() {
 		if (!_width || !_height) return;
-		if (_echoQ) cout << "caching columns frequencies ..." << endl;
+		if (_echoQ) std::cout << "caching columns frequencies ..." << std::endl;
 		double height = _height;
 		_colseqs.resize(_width, 0);
 		_colnsym.resize(_width);
@@ -384,7 +384,7 @@ struct BMatrix {
 	}
 	void CacheChaosEntropy() {
 		if (!_colfreq.size()) return;
-		if (_echoQ) cout << "caching chaos entropies ..." << endl;
+		if (_echoQ) std::cout << "caching chaos entropies ..." << std::endl;
 		_chaos_ent.resize(_width);
 		ByteDblMapIter it;
 		for(int col=0; col<_width; col++) {
@@ -466,26 +466,26 @@ struct BMatrix {
 		return entropy;
 	}
 
-	bool WriteCluXml(string fn, string msafn, double elapsed, CluSettings &cs) {
-		ostringstream text;
+	bool WriteCluXml(std::string fn, std::string msafn, double elapsed, CluSettings &cs) {
+		std::ostringstream text;
 		if (!_cr.clu.size() || !_freqent.size() || !_cr.clustRealEnt.size()) return false;
 
-		text << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" << endl <<
-				"<msa version=\"1\" rows=\"" << _height << "\" columns=\"" << _width << "\" elapsed=\"" << elapsed << "\">" << endl <<
-				"  <source file=\"" << GetFileName(msafn) << "\"/>" << endl <<
-				"  <conservation>" << ToString(_freqent) << "</conservation>" << endl <<
-				"  <conservationEx>" << ToString(_freqent2) << "</conservationEx>" << endl <<
-				"  <conservationNG>" << ToString(_freqentNG) << "</conservationNG>" << endl <<
+		text << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" << std::endl <<
+				"<msa version=\"1\" rows=\"" << _height << "\" columns=\"" << _width << "\" elapsed=\"" << elapsed << "\">" << std::endl <<
+				"  <source file=\"" << GetFileName(msafn) << "\"/>" << std::endl <<
+				"  <conservation>" << ToString(_freqent) << "</conservation>" << std::endl <<
+				"  <conservationEx>" << ToString(_freqent2) << "</conservationEx>" << std::endl <<
+				"  <conservationNG>" << ToString(_freqentNG) << "</conservationNG>" << std::endl <<
 				"  <clustering a1begin=\"" << cs.A1begin << "\" a1end=\"" << cs.A1end << "\" a1steps=\"" 
-						<< cs.A1steps << "\" a1opt=\"" << _cr.A1 << "\" clusters=\"" << _cr.clu.size() << "\">" << endl <<
-				"    <specificity>"    << ToString(_cr.clustRealEnt) << "</specificity>" << endl <<
-				"    <specificityNG>"  << ToString(_cr.clustRealEntNG) << "</specificityNG>" << endl;
+						<< cs.A1steps << "\" a1opt=\"" << _cr.A1 << "\" clusters=\"" << _cr.clu.size() << "\">" << std::endl <<
+				"    <specificity>"    << ToString(_cr.clustRealEnt) << "</specificity>" << std::endl <<
+				"    <specificityNG>"  << ToString(_cr.clustRealEntNG) << "</specificityNG>" << std::endl;
 		for(int k=0; k<_cr.clu.size(); k++) {
 		text << "    <cluster id=\"" << k << "\" size=\"" << _cr.clu[k].ids.size() << "\">" <<
-				ToString(_cr.clu[k].ids) << "</cluster>" << endl;
+				ToString(_cr.clu[k].ids) << "</cluster>" << std::endl;
 		}
-		text << "  </clustering>" << endl <<
-				"</msa>" << endl;
+		text << "  </clustering>" << std::endl <<
+				"</msa>" << std::endl;
 
 		StringToFile(text, fn);
 		return true;
