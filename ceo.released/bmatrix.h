@@ -204,7 +204,7 @@ struct BMatrix {
 							energy = A1 * entropy / (double)(_width * length) + (1. - A1) * log((double)length);
 							_dmap.add(tmpclu, entropy, energy);
 						}
-						if (fabs(energy - best_energy) > DBL_EPSILON && energy < best_energy) {
+						if (energy < best_energy) {
 						//	oss << "better: " << energy << " < " << best_energy << " : clu " << mc1 << " + " << mc2 << endl; qlog(oss);
 							best_energy = energy;
 							mc1 = c1; mc2 = c2;
