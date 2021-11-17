@@ -83,13 +83,7 @@ struct CluPairInfo {	// only pairs of clusters get merged
 	void set(double ent, double eng) { entropy = ent; energy = eng; }
 };
 
-#ifdef WIN32 // MSVC
 #include <unordered_map>
-#elif __APPLE__
-#include <unordered_map>
-#else
-#include <tr1/unordered_map>
-#endif
 
 struct CluIDHash;
 struct CluIDEqual { bool operator() (const IntAry &c1, const IntAry &c2) const { return c1 == c2; }};

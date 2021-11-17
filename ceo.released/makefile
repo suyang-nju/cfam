@@ -1,2 +1,2 @@
 all:
-	g++ main.cpp utils.cpp -O3 -o cea
+	g++ -std=c++11 main.cpp utils.cpp -O3 -o cea
