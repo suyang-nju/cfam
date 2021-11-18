@@ -411,7 +411,7 @@ struct BMatrix {
 		ByteDblMapIter it;
 		for(int col=0; col<_width; col++) {
 			IntDblMap& hash = _chaos_ent[col];
-			for (int j=2; j<=_height; j++) {
+			for (int j=1; j<=_height; j++) {
 				ByteDblMap ww0;
 				for(it=_colfreq[col].begin(); it!=_colfreq[col].end(); it++) {
 					byte sym  = it->first;
@@ -425,7 +425,7 @@ struct BMatrix {
 
 		ofstream ofs("Stilde_k_cfam.csv");
 		ofs << "N_k,Stilde_k\n" << setprecision(17);
-		for (int j=2; j<=_height; j++) {
+		for (int j=1; j<=_height; j++) {
 			double chaos_entropy = 0.0;
 			for(int col=0; col<_width; col++) {
 				chaos_entropy += _chaos_ent[col][j];
