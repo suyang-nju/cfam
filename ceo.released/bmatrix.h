@@ -445,7 +445,7 @@ struct BMatrix {
 		for (it=hash.begin(); it!=hash.end(); it++) {
 			byte sym  = it->first;
 		    double freq = it->second;
-			if (freq > 1.) entropy -= cached_gammln(freq + 1., treat_as_int);
+			entropy -= cached_gammln(freq + 1., treat_as_int);
 		}
 		return entropy;
 	}
