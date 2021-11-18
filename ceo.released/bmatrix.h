@@ -75,6 +75,7 @@ struct BMatrix {
 		_width = msa._width;
 		_height = msa._height;
 		_gap = msa.gap;
+		_symignore = SYM_BYTE_IGNORE;
 		_transposed.resize(msa._width, ByteAry());
 		_maxcharsize = 0;
 		ByteByteMapIter it;
