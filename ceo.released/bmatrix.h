@@ -157,6 +157,10 @@ struct BMatrix {
 		ostringstream oss;
 		if (_echoQ) oss << endl << "Clustering,  A1 min..max, nsteps : " << cs.A1begin << ".." << cs.A1end << ", " << cs.A1steps << " steps" << endl; qlog(oss);
 
+		ofstream ofs("grid_search_cfam.csv");
+		ofs << "A1,num_clusters,dQ_km,dS_new_cluster,dS0,new_cluster\n";
+		cout << "_symignore=" << (int)_symignore << " _gap=" << (int)_gap << endl;
+
 		int pstep = 0;
 		_dmap.Init();
 		_a1list.clear();
@@ -222,6 +226,13 @@ struct BMatrix {
 					oss << endl << "merging clu " << mc1 << " + " << mc2 << " energy: " << best_energy
 						<< ", entropy: "  << _cr.whole_entropy << ", nclus: " << _cr.clu.size(); qlog(oss);
 					//	<< "   " << _dmap.str();
+
+				ofs << setprecision(3) << A1 << "," << _cr.clu.size() << "," << setprecision(18) << best_energy << "," << joined_entropy << "," << _cr.whole_entropy << ",";
+				ofs << _cr.clu[mc1].ids[0];
+				for (int j=1; j<_cr.clu[mc1].ids.size(); ++j) {
+					ofs << " " << _cr.clu[mc1].ids[j];
+				}
+				ofs << "\n";
 
 				if (cs.ncluA && _cr.clu.size() == cs.ncluA) break;
 			}
@@ -378,9 +389,18 @@ struct BMatrix {
 			for (cit=nsym.begin(); cit!=nsym.end(); cit++) {
 				byte sym = cit->first;
 			    int  cnt = cit->second;
-			    double f = cnt / height;
+			    double f = (double)cnt / (double)height;
 			    freq[sym] = f;
 			}
+		}
+
+		ofstream ofs("N_ia_cfam.csv");
+		for (auto sym : _code2sym) {
+			ofs << sym;
+			for (int j=0; j<_width; j++) {
+				ofs << "," << _colnsym[j][_sym2code[sym]];
+			}
+			ofs << "\n";
 		}
 	}
 	void CacheChaosEntropy() {
@@ -400,6 +420,16 @@ struct BMatrix {
 				double entropy = GetFreqHashEntropy(ww0, false);
 				hash[j] = entropy;
 			}
+		}
+
+		ofstream ofs("Stilde_k_cfam.csv");
+		ofs << "N_k,Stilde_k\n" << setprecision(17);
+		for (int j=2; j<=_height; j++) {
+			double chaos_entropy = 0.0;
+			for(int col=0; col<_width; col++) {
+				chaos_entropy += _chaos_ent[col][j];
+			}
+			ofs << j << "," << chaos_entropy << "\n";
 		}
 	}
 	double GetChaosEntropy(int col, int length) {
