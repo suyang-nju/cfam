@@ -180,6 +180,7 @@ struct BMatrix {
 
 			double energy, entropy;
 			double A1 = cs.A1begin + nstep * (cs.A1end - cs.A1begin) / (double)cs.A1steps;
+			_cr.A1 = A1;
 			if (_echoQ) oss << "with A1 = " << A1 << " ---------------------------------" << endl; qlog(oss);
 
 			while (_cr.clu.size() > 1) {
