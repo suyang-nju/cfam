@@ -169,6 +169,11 @@ struct BMatrix {
 		_bestshots.clear();
 		IntAry tmpclu;
 
+		double single_sequence_cluster_entropy = 0.0;
+		for (int col=0; col<_cr.columns.size(); col++) {
+			single_sequence_cluster_entropy -= GetChaosEntropy(_cr.columns[col], 1);
+		}
+
 		Profiler prf;
 		int prfcluID     = _prfQ ? prf.add("clustering", true) : 0;
 		int prfEntropyID = _prfQ ? prf.add("entropy") : 0;
@@ -181,7 +186,10 @@ struct BMatrix {
 			_cr.clear(false);
 			_cr.clu.resize(_height);
 			// start with N clusters where N = _height with one sequence each
-			for(int k=0;k<_height;k++) _cr.clu[k].ids.push_back(k);
+			for(int k=0;k<_height;k++) {
+				_cr.clu[k].ids.push_back(k);
+				_cr.clu[k].entropy = single_sequence_cluster_entropy;
+			}
 
 			double energy, entropy;
 			double A1 = cs.A1begin + nstep * (cs.A1end - cs.A1begin) / (double)cs.A1steps;
@@ -291,7 +299,6 @@ struct BMatrix {
 			double whole_clu_entropy = 0, whole_clu_entropy_NG = 0.;
 			for(int i=0; i<res.clu.size(); i++) {
 				int clu_len = res.clu[i].ids.size();
-				if (clu_len == 1) continue;
 				int clu_len_NG = 0;					// non-gappy length
 				for (int lnIdx=0; lnIdx<res.clu[i].ids.size(); lnIdx++) {
 					int line = res.clu[i].ids[lnIdx];
